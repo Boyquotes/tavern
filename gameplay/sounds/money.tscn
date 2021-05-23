@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://assets/sound/money1.wav" type="AudioStream" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends AudioStreamPlayer2D
+
+
+onready var money1 = load(\"res://assets/sound/money1.wav\")
+onready var money2 = load(\"res://assets/sound/money2.wav\")
+onready var money3 = load(\"res://assets/sound/money3.wav\")
+
+
+func _ready():
+    var list_ = [money1, money2, money3]
+    stream = list_[randi() % list_.size()]
+    playing = true
+    play()
+
+
+func _on_money_finished():
+    queue_free()
+"
+
+[node name="money" type="AudioStreamPlayer2D"]
+stream = ExtResource( 1 )
+volume_db = -6.0
+pitch_scale = 0.6
+autoplay = true
+bus = "SFX"
+script = SubResource( 1 )
+[connection signal="finished" from="." to="." method="_on_money_finished"]

@@ -1,0 +1,105 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+
+
+onready var pause_timer = get_node(\"pause\")
+var floating_text = preload(\"res://ui/floating_text.tscn\")
+
+
+var farm = preload(\"res://gameplay/sounds/farm.tscn\")
+var money = preload(\"res://gameplay/sounds/money.tscn\")
+var lumber = preload(\"res://gameplay/sounds/lumber.tscn\")
+
+
+var ec
+var position_world : Vector2
+var position_tile : Vector2
+var building_name : String = \"\"
+var id setget id_start
+var current_population : int = 0 setget population_change
+var list_close_building = []
+
+
+func _ready():
+    pass
+#    farm = data.farm
+#    money = data.money
+#    lumber = data.lumber
+
+
+func check_close_building():
+    for building_node in data.list_building:
+        if position_world.distance_to(building_node.position_world) < 400:
+            if building_node.id == 4 or building_node.id == 5 or building_node.id == 1:
+                list_close_building += [building_node]
+
+
+func id_start(new_id):
+    id = new_id
+    if id == 2:
+        data.pop_max += 2
+
+
+func population_change(new_population_value):
+    
+    if current_population < new_population_value:
+        var sound
+        if id == 0:
+            data.money_current += 1
+            sound = money.instance()
+            sound.global_position = position_world
+            data.current_map.get_node(\"trash\").add_child(sound)
+            display_new_pop(\"+\" + str(1) + \" $$$\", position_world, Color(255, 204, 0, 1))
+        if id == 3:
+            data.money_current += 3
+            sound = money.instance()
+            sound.global_position = position_world
+            data.current_map.get_node(\"trash\").add_child(sound)
+            display_new_pop(\"+\" + str(3) + \" $$$\", position_world, Color(255, 204, 0, 1))
+        if id == 2:
+            data.food_current -= 1
+            display_new_pop(\"-\" + str(1) + \" food\", position_world, Color(255, 0, 0, 1))
+        if id == 4:
+            data.money_current -= 1
+            data.food_current += 2
+            sound = farm.instance()
+            sound.global_position = position_world
+            data.current_map.get_node(\"trash\").add_child(sound)
+            display_new_pop(\"-\" + str(1) + \" $$$\", position_world, Color(255, 204, 0, 1))
+            yield(data.create_pause(0.7), \"timeout\")
+            display_new_pop(\"+\" + str(2) + \" food\", position_world, Color(255, 0, 0, 1))
+        if id == 5:
+            data.money_current -= 1
+            data.wood_current += 2
+            sound = lumber.instance()
+            sound.global_position = position_world
+            data.current_map.get_node(\"trash\").add_child(sound)
+            display_new_pop(\"-\" + str(1) + \" $$$\", position_world, Color(255, 204, 0, 1))
+            yield(data.create_pause(0.7), \"timeout\")
+            display_new_pop(\"+\" + str(2) + \" wood\", position_world, Color(58, 38, 38, 1))
+    current_population = new_population_value
+
+
+func display_new_pop(text_label, _position, color):
+    var floating_text_instance = floating_text.instance()
+    floating_text_instance.cur_position = position_world
+    floating_text_instance.valeur = str(text_label)
+    floating_text_instance.color = color
+    data.current_map.get_node(\"trash\").add_child(floating_text_instance) 
+
+
+
+
+
+
+
+"
+
+[node name="building" type="Node"]
+script = SubResource( 1 )
+
+[node name="pause" type="Timer" parent="."]
+wait_time = 0.1
+one_shot = true

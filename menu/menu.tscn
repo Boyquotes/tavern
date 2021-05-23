@@ -1,0 +1,117 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Control
+
+
+var ec
+onready var instance_options = preload(\"res://menu/options.tscn\")
+
+
+func _ready():
+    OS.set_window_title(\"The tavern\")
+    ec = $vbox/play.connect(\"pressed\", self, \"button_single\")
+    ec = $vbox/options.connect(\"pressed\", self, \"button_option\")
+    ec = $vbox/quit.connect(\"pressed\", self, \"button_quit\")
+    ec = $vbox/restart.connect(\"pressed\", self, \"button_restart\")
+    if data.true_if_game_on:
+        $vbox/restart.visible = true
+    else:
+        $vbox/restart.visible = false
+
+
+func button_single():
+    if data.true_if_game_on:
+        get_tree().paused = false
+        queue_free()
+        return
+    data.true_if_game_on = true
+    get_tree().paused = false
+    ec = get_tree().change_scene(\"res://map/screen.tscn\")
+
+
+func button_option():
+    if data.true_if_game_on:
+        data.current_hud.add_child(instance_options.instance())
+        queue_free()
+    else:
+        ec = get_tree().change_scene(\"res://menu/options.tscn\")
+
+
+func button_quit():
+    get_tree().quit()
+
+
+func button_restart():
+    data.true_if_game_on = true
+    get_tree().paused = false
+    ec = get_tree().reload_current_scene()
+"
+
+[node name="menu" type="Control"]
+pause_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="title" type="Label" parent="."]
+anchor_right = 1.0
+anchor_bottom = 0.3
+text = "EMBRACE CAPITALISM
+build your own city"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="vbox" type="VBoxContainer" parent="."]
+anchor_top = 0.3
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 200.0
+margin_right = -200.0
+margin_bottom = 40.0
+custom_constants/separation = 27
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="play" type="Button" parent="vbox"]
+margin_right = 624.0
+margin_bottom = 20.0
+text = "Play"
+
+[node name="options" type="Button" parent="vbox"]
+margin_top = 47.0
+margin_right = 624.0
+margin_bottom = 67.0
+text = "Options"
+
+[node name="quit" type="Button" parent="vbox"]
+margin_top = 94.0
+margin_right = 624.0
+margin_bottom = 114.0
+text = "Quit"
+
+[node name="restart" type="Button" parent="vbox"]
+margin_top = 141.0
+margin_right = 624.0
+margin_bottom = 161.0
+text = "Restart"
+
+[node name="title2" type="Label" parent="."]
+anchor_top = 0.643
+anchor_right = 1.0
+anchor_bottom = 0.97
+text = "Space to build
+E to erase
+Escape to open the menu"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}

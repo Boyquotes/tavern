@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends AudioStreamPlayer2D
+
+
+onready var lumber1 = load(\"res://assets/sound/lumber1.wav\")
+onready var lumber2 = load(\"res://assets/sound/lumber2.wav\")
+onready var lumber3 = load(\"res://assets/sound/lumber3.wav\")
+
+
+func _ready():
+    var list_ = [lumber1, lumber2, lumber3]
+    stream = list_[randi() % list_.size()]
+    playing = true
+    play()
+
+
+func _on_lumber_finished():
+    queue_free()
+"
+
+[node name="lumber" type="AudioStreamPlayer2D"]
+autoplay = true
+bus = "SFX"
+script = SubResource( 1 )
+[connection signal="finished" from="." to="." method="_on_lumber_finished"]

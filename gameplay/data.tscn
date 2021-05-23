@@ -1,0 +1,228 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+
+
+onready var instance_building = preload(\"res://gameplay/building.tscn\")
+onready var instance_menu = preload(\"res://menu/menu.tscn\")
+
+
+var data_building = {
+    0:\"tavern\"
+    , 1:\"dongon\"
+    , 2:\"house\"
+    , 3:\"maker\"
+    , 4:\"farm\"
+    , 5:\"lumber\"
+}
+
+var cost_building = {
+    0:[10, 5]
+    , 2:[5, 2]
+    , 3:[10, 2]
+    , 4:[2, 5]
+    , 5:[2, 2]
+}
+
+
+
+
+var true_if_game_on : bool = false
+var list_building = {}
+var money_current = 30 setget money_change
+var wood_current = 30 setget wood_change
+var food_current = 30 setget food_change
+var pop_max = 1
+var pop_current = 0 setget pop_change
+var current_hud
+var current_map
+var current_navigation
+var current_map_ground
+var current_map_building
+var current_building_selected : int = 0
+var true_if_road_selected : bool = false
+
+
+signal money_change
+signal wood_change
+signal food_change
+signal pop_change
+
+var background_noise
+
+
+func pop_change(new_value):
+    if pop_current > new_value and new_value < 6:
+        background_noise.stop()
+    elif pop_current < new_value and new_value == 6:
+        background_noise.play()
+    pop_current = new_value
+    emit_signal(\"pop_change\")
+
+
+func money_change(new_value):
+    money_current = new_value
+    emit_signal(\"money_change\")
+
+
+func wood_change(new_value):
+    wood_current = new_value
+    emit_signal(\"wood_change\")
+
+
+func food_change(new_value):
+    food_current = new_value
+    emit_signal(\"food_change\")
+
+
+
+
+
+func _unhandled_input(event: InputEvent):
+    if event.is_action_pressed(\"action_building\"):
+        create_building()
+    if event.is_action_pressed(\"delete_building\"):
+        delete_building()
+    if event.is_action_pressed(\"menu\"):
+        var menu = instance_menu.instance()
+        current_hud.add_child(menu)
+        get_tree().paused = !get_tree().paused
+
+
+var current_mouse
+var current_pos_tile
+var current_map_mouse
+var current_map_mouse2
+var remember_last_pos = Vector2(0, 0)
+
+
+func _process(_delta):
+    if current_map:
+        if true_if_road_selected:
+            current_map_mouse.set_cellv(remember_last_pos, -1)
+            current_map_mouse2.set_cellv(remember_last_pos, -1)
+
+            current_mouse = current_map.get_global_mouse_position()
+            current_pos_tile = current_map_mouse2.world_to_map(current_mouse)
+            remember_last_pos = current_pos_tile
+            current_map_mouse2.set_cellv(current_pos_tile, 0)
+        else:
+            current_map_mouse.set_cellv(remember_last_pos, -1)
+            current_map_mouse2.set_cellv(remember_last_pos, -1)
+
+            current_mouse = current_map.get_global_mouse_position()
+            current_pos_tile = current_map_mouse.world_to_map(current_mouse)
+            remember_last_pos = current_pos_tile
+            current_map_mouse.set_cellv(current_pos_tile, current_building_selected)
+
+
+func true_if_buildable(position : Vector2):
+    var tiles_adjacents = [0]
+    for i in tiles_adjacents:
+        for j in tiles_adjacents:
+            if current_map_building.get_cellv(position + Vector2(i, j)) >= 0 or \\
+                current_map_ground.get_cellv(position) < 0:
+                return false
+    return true
+
+
+func create_instance_building(building_selected, position_):
+    var instance_building_ = instance_building.instance()
+    instance_building_.building_name = data_building[building_selected]
+    instance_building_.id = building_selected
+    instance_building_.position_tile = position_
+    instance_building_.position_world = current_map_building.map_to_world(position_)
+    list_building[instance_building_] = building_selected
+    return instance_building_
+
+
+func true_if_cost(current_building):
+    if cost_building[current_building][0] > money_current:
+        return false
+    if cost_building[current_building][1] > wood_current:
+        return false
+    return true
+
+
+func deduce_cost(current_building):
+    money_current -= cost_building[current_building][0]
+    wood_current -= cost_building[current_building][1]
+    emit_signal(\"money_change\")
+    emit_signal(\"wood_change\")
+
+
+func delete_building():
+    var mouse_pos = current_map.get_global_mouse_position()
+    var current_pos = current_map_building.world_to_map(mouse_pos)
+    if true_if_road_selected:
+        current_navigation.set_cellv(current_navigation.world_to_map(mouse_pos), -1)
+    elif current_map_building.get_cellv(current_pos) != -1:
+        current_map_building.set_cellv(current_pos, -1)
+        for building in list_building:
+            if building.position_tile == current_pos:
+                list_building.erase(building)
+        for building in list_building:
+#            yield(get_tree().create_timer(0.1), \"timeout\")
+            building.check_close_building()
+
+
+func create_building():
+    var mouse_pos = current_map.get_global_mouse_position()
+    var current_pos = current_map_building.world_to_map(mouse_pos)
+    if true_if_road_selected:
+        current_navigation.set_cellv(current_navigation.world_to_map(mouse_pos), 0)
+    elif true_if_buildable(current_pos) and true_if_cost(current_building_selected):
+        deduce_cost(current_building_selected)
+        current_map_building.set_cellv(current_pos, current_building_selected)
+#        var list_tiles = [-1, 0, 1]
+#        for i in list_tiles:
+#            for j in list_tiles:
+#                current_navigation.set_cellv(current_navigation.world_to_map(mouse_pos) + Vector2(i, j), 0)
+        create_instance_building(current_building_selected, current_pos)
+
+        for building in list_building:
+#            yield(get_tree().create_timer(0.1), \"timeout\")
+            building.check_close_building()
+    # debug
+#    for g in list_building.keys():
+#        print(g)
+#    for g in list_building.values():
+#        print(g)
+
+
+signal new_contract
+
+
+var list_contracts = {
+    0:[{\"f\":20}, {\"g\":5}]
+    , 1:[{\"g\":10}, {\"f\":20}]
+    , 2:[{\"g\":10}, {\"w\":10}]
+    , 3:[{\"w\":10}, {\"g\":3}]
+    , 4:[{\"w\":10}, {\"f\":5}]
+}
+
+
+func create_contract():
+    return list_contracts[randi() % list_contracts.size()]
+    
+
+func _on_contract_timeout():
+    emit_signal(\"new_contract\", create_contract())
+
+
+func create_pause(timing):
+#    yield(get_tree().create_timer(timing), \"timeout\")
+    return get_tree().create_timer(timing)
+
+
+
+"
+
+[node name="data" type="Node"]
+script = SubResource( 1 )
+
+[node name="contract" type="Timer" parent="."]
+wait_time = 15.0
+autostart = true
+[connection signal="timeout" from="contract" to="." method="_on_contract_timeout"]

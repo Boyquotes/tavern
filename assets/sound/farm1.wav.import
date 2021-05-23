@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/farm1.wav-8c7f6b2d4ca43733be805d35b60f2226.sample"
+
+[deps]
+
+source_file="res://assets/sound/farm1.wav"
+dest_files=[ "res://.import/farm1.wav-8c7f6b2d4ca43733be805d35b60f2226.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

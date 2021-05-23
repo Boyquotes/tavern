@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/lumber1.wav-d03e641e6513f2fac35cf9ea1986b8be.sample"
+
+[deps]
+
+source_file="res://assets/sound/lumber1.wav"
+dest_files=[ "res://.import/lumber1.wav-d03e641e6513f2fac35cf9ea1986b8be.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0
